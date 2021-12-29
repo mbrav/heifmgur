@@ -1,12 +1,12 @@
 from rest_framework import serializers
 
 from .models import Image
-from .utils import Util
+from .utils.img import Util
 
 
 class ImageSerializer(serializers.ModelSerializer):
     """
-    Базовый Image сериализатор
+    Base Image serializer
     """
 
     def validate(self, attrs):
@@ -46,13 +46,13 @@ class ImageUpdateSerializer(serializers.ModelSerializer):
 
 class ImageResizeSerializer(serializers.ModelSerializer):
     """
-    Image сериализатор для resize запросов
+    Image serializer for resize requests
     """
 
     def pixel_dimension(value):
         if value < 1:
             raise serializers.ValidationError(
-                'Цифра должна быть не меньше 1')
+                'Number must not be lower than 1')
 
     height = serializers.IntegerField(
         required=True,

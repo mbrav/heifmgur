@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from .models import Image
 from .serializers import (ImageResizeSerializer, ImageSerializer,
                           ImageUpdateSerializer)
-from .utils import Util
+from .utils.img import Util
 
 
 class ImageViewSet(viewsets.ModelViewSet):
@@ -22,16 +22,15 @@ class ImageViewSet(viewsets.ModelViewSet):
         url = new_data.get('url')
         image = new_data.get('picture')
 
-        if image:
-            if not name:
-                new_data['name'] = image.name
+        if image and not name:
+            new_data['name'] = image.name
         if url:
-            image_name = Util.parse_url_file_name(url, ext=True)
+            name = Util.parse_file_name(url, ext=True)
             new_image = Util.download_img(url, django=True)
-            new_image.name = image_name
+            new_image.name = name
             new_data['picture'] = new_image
             if not name:
-                new_data['name'] = image_name
+                new_data['name'] = name
 
         new_data._mutable = False
         serializer.save(**new_data)
@@ -47,7 +46,7 @@ class ImageViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def resize(self, request, pk=None):
-        """Специальный @action декоратор для манипуляции рамера изображения"""
+        """@action for resizing image"""
 
         image = self.get_object()
         serializer = serializer = self.get_serializer(
@@ -58,7 +57,7 @@ class ImageViewSet(viewsets.ModelViewSet):
             int(request.data['width']),
             int(request.data['height']))
         image_path = image.picture.path
-        image_name = Util.parse_url_file_name(
+        image_name = Util.parse_file_name(
             image.picture.name, ext=True)
         new_image = Util.resize_image(
             image_path, *new_dimensions)

@@ -1,4 +1,4 @@
-from app.models import Image
+from api.models import Image
 from rest_framework.reverse import reverse
 from rest_framework.test import APIRequestFactory
 

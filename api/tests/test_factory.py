@@ -1,7 +1,7 @@
 import random
 from io import BytesIO
 
-from app.models import Image as ImageModel
+from api.models import Image as ImageModel
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.test import Client, TestCase
 from PIL import Image, ImageDraw, ImageFont
