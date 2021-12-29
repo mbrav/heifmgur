@@ -32,17 +32,29 @@ class PILImage():
         file = File(image_io, name=self.image)
         return file
 
+    def convert_to_wand(self, format: str = 'jpeg'):
+        """Convert and PIL image to a Wand image"""
+        image_io = BytesIO()
+        self.image.save(image_io, format=format)
+        blob = image_io.getvalue()
+        return Wand(blob=blob)
+
 
 class WandImage():
     """Class for Imagemagick's Wand Image"""
 
-    def __init__(self, image: str):
-        self.image = Wand(filename=image)
+    def __init__(self, filename: str):
+        self.image = Wand(filename=filename)
 
-    def convert_to(self, format: str, name: str):
+    def convert_to(self, name: str = 'image', format: str = 'jpg'):
         name = parse_file_name(name)
         image_convert = self.image.convert(format)
         image_convert.save(filename=f'{name}.{format}')
+
+    def convert_to_PIL(self):
+        """Convert and Wand image to a PIL image"""
+        pil_image = Image.open(BytesIO(self.image.make_blob()))
+        return pil_image
 
 
 class URLImage():
@@ -124,8 +136,17 @@ class Util:
 
 if __name__ == '__main__':
     # url = 'https://avatars.githubusercontent.com/u/1024025'
-    url = 'https://www.w3.org/People/mimasa/test/imgformat/img/w3c_home.jpg'
-    response = Util.is_image_and_ready(url)
-    print(response)
-    test = Util.download_img(url)
-    print(test.tell())
+    # url = 'https://www.w3.org/People/mimasa/test/imgformat/img/w3c_home.jpg'
+    # response = Util.is_image_and_ready(url)
+    # print(response)
+    # test = Util.download_img(url)
+    # print(test.tell())
+
+    image = WandImage('test.png')
+    convert = image.convert_to_PIL()
+    print(convert)
+
+    image = PILImage('test.png')
+    convert = image.convert_to_wand(format='png')
+    convert.rotate(90)
+    convert.save(filename=f'convert.png')
