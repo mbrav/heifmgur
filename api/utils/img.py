@@ -21,23 +21,38 @@ def parse_file_name(path: str, ext: bool = False) -> str:
 class PILImage():
     """Class for PIL Image"""
 
-    def __init__(self, image: str):
-        self.image = Image.open(image)
+    def __init__(self, filename: str):
+        self.image = Image.open(filename)
+        self.format = 'jpeg'
+        self.quality = 90
+        self.mode = 'RGB'
 
-    def resize(self, width: int, height: int, format: str = 'JPEG', quality: int = 90) -> File:
-        self.image.convert('RGB')
+    def set_format_settings(
+            self,
+            format: str,
+            mode: str,
+            quality: int):
+        self.format = format
+        self.quality = quality
+        self.mode = mode
+
+    def resize(self, width: int, height: int) -> File:
+        self.image.convert(mode=self.mode)
         image_io = BytesIO()
-        new_image = self.image.resize(size=(width, height))
-        new_image.save(image_io, format, quality=quality)
+        self.image = self.image.resize(size=(width, height))
+        self.image.save(image_io, format=self.format, quality=self.quality)
         file = File(image_io, name=self.image)
         return file
 
     def convert_to_wand(self, format: str = 'jpeg'):
-        """Convert and PIL image to a Wand image"""
+        """Convert a PIL image to a Wand image"""
         image_io = BytesIO()
         self.image.save(image_io, format=format)
         blob = image_io.getvalue()
         return Wand(blob=blob)
+
+    def get(self):
+        return self.image
 
 
 class WandImage():
@@ -45,16 +60,21 @@ class WandImage():
 
     def __init__(self, filename: str):
         self.image = Wand(filename=filename)
+        self.filename = parse_file_name(filename)
+        self.format = 'jpg'
 
-    def convert_to(self, name: str = 'image', format: str = 'jpg'):
+    def convert_to(self, name: str, format: str = 'jpg'):
         name = parse_file_name(name)
-        image_convert = self.image.convert(format)
-        image_convert.save(filename=f'{name}.{format}')
+        self.image = self.image.convert(format)
+        self.image.save(filename=f'{name}.{format}')
 
     def convert_to_PIL(self):
-        """Convert and Wand image to a PIL image"""
+        """Convert a Wand image to a PIL image"""
         pil_image = Image.open(BytesIO(self.image.make_blob()))
         return pil_image
+
+    def get(self):
+        return self.image
 
 
 class URLImage():
@@ -143,10 +163,11 @@ if __name__ == '__main__':
     # print(test.tell())
 
     image = WandImage('test.png')
-    convert = image.convert_to_PIL()
-    print(convert)
+    # convert = image.convert_to_PIL()
+    # print(convert)
+    image.convert_to('new_image', 'heic')
 
-    image = PILImage('test.png')
-    convert = image.convert_to_wand(format='png')
-    convert.rotate(90)
-    convert.save(filename=f'convert.png')
+    # image = PILImage('test.png')
+    # convert = image.convert_to_wand(format='png')
+    # convert.rotate(90)
+    # convert.save(filename=f'convert.png')

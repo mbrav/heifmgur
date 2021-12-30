@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "heifmgur"
 version = "0.1.0"
-description = "Image upload service API in Django leveraging async and HEIF"
+description = "Experimental Image upload service API in Django using the HEIF image format"
 authors = ["mbrav <mbrav@protonmail.com>"]
 license = "GNU v3"
 

@@ -6,4 +6,4 @@
 
 <h1 align="center">heifmgur</h2>
 
-<p align="center">Image upload service API in Django leveraging async and HEIF</p>
+<p align="center">Experimental Image upload service API in Django using the HEIF image format</p>
