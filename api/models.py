@@ -1,11 +1,13 @@
 from django.db import models
 
+from .fields import HeifmgurField
+
 
 class Image(models.Model):
 
-    picture = models.ImageField(
-        'Картинка',
-        help_text='Укажите фаил картинки',
+    picture = HeifmgurField(
+        'Image',
+        help_text='Specify image file',
         upload_to='%Y/%m/%d',
         height_field='height',
         width_field='width',
@@ -15,49 +17,46 @@ class Image(models.Model):
 
     parent_picture = models.ForeignKey(
         'self',
-        help_text='Укажите родителя картинки',
+        help_text='Specify parent picture',
         on_delete=models.CASCADE,
         null=True,
         blank=True,
     )
 
     url = models.CharField(
-        'Внешняя картинка',
-        help_text='Укажите ссылку на внешнюю картинку',
+        'External picture',
+        help_text='Specify picture url',
         max_length=255,
         blank=True,
         null=True,
     )
 
     name = models.CharField(
-        'Имя картинки',
-        help_text='Укажите имя картинки',
+        'Picture name',
+        help_text='Specify name of the picture',
         max_length=255,
         blank=True,
     )
 
     width = models.PositiveIntegerField(
-        'Ширина Картинки',
-        help_text='Ширина Картинки',
+        'Picture width',
         null=True,
     )
 
     height = models.PositiveIntegerField(
-        'Высота Картинки',
-        help_text='Высота Картинки',
+        'Picture height',
         null=True,
     )
 
     pub_date = models.DateTimeField(
-        'Дата публикации картинки',
-        help_text='Укажите дату публикации картинки',
+        'Date of publication',
         auto_now_add=True,
     )
 
     class Meta:
         ordering = ('id',)
-        verbose_name = 'Картинка'
-        verbose_name_plural = 'Картинки'
+        verbose_name = 'Image'
+        verbose_name_plural = 'Images'
 
     def __str__(self):
-        return 'Картинка #%s' % (self.id, )
+        return f'Image #{self.id}'
