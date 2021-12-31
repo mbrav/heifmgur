@@ -18,126 +18,153 @@ def parse_file_name(path: str, ext: bool = False) -> str:
     return no_extension
 
 
-class PILImage():
+class BaseImage():
+    """Base Image Base class"""
+
+    def __init__(self):
+        self.image = None
+        self.file = None
+
+        self.format = 'jpeg'
+        self.mode = 'RGB'
+        self.quality = 90
+        self.content_type = 'image/jpeg'
+
+    def set_format_settings(
+        self,
+            format: str = None,
+            mode: str = None,
+            quality: int = None):
+
+        if format:
+            self.format = format
+        if quality:
+            self.quality = quality
+        if mode:
+            self.mode = mode
+
+
+class PILImage(BaseImage):
     """Class for PIL Image"""
 
     def __init__(self, filename: str):
+        super().__init__()
         self.image = Image.open(filename)
-        self.format = 'jpeg'
-        self.quality = 90
-        self.mode = 'RGB'
+        self.format = self.image.format
 
-    def set_format_settings(
-            self,
-            format: str,
-            mode: str,
-            quality: int):
-        self.format = format
-        self.quality = quality
-        self.mode = mode
-
-    def resize(self, width: int, height: int) -> File:
+    def resize(self, width: int, height: int):
         self.image.convert(mode=self.mode)
-        image_io = BytesIO()
         self.image = self.image.resize(size=(width, height))
-        self.image.save(image_io, format=self.format, quality=self.quality)
-        file = File(image_io, name=self.image)
-        return file
 
-    def convert_to_wand(self, format: str = 'jpeg'):
+    def convert_to_wand(self, format: str = None):
         """Convert a PIL image to a Wand image"""
+        if not format:
+            format = self.format
         image_io = BytesIO()
         self.image.save(image_io, format=format)
         blob = image_io.getvalue()
-        return Wand(blob=blob)
+        self.image = Wand(blob=blob)
 
-    def get(self):
+    def get(self, django_file: bool = False):
+        if django_file:
+            image_io = BytesIO()
+            self.image.save(image_io, format=self.format, quality=self.quality)
+            return File(image_io, name=self.image)
         return self.image
 
 
-class WandImage():
+class WandImage(BaseImage):
     """Class for Imagemagick's Wand Image"""
 
     def __init__(self, filename: str):
+        super().__init__()
         self.image = Wand(filename=filename)
-        self.filename = parse_file_name(filename)
-        self.format = 'jpg'
+        self.format = self.image.format
+        self.name = parse_file_name(filename)
 
-    def convert_to(self, name: str, format: str = 'jpg'):
-        name = parse_file_name(name)
-        self.image = self.image.convert(format)
-        self.image.save(filename=f'{name}.{format}')
+    def convert_to(self, format: str = None):
+        if not format:
+            format = self.format
+        else:
+            self.format = format
+        self.image.format = self.format
+        self.image.mode = self.mode
+        self.image = self.image.convert(format=format)
 
     def convert_to_PIL(self):
         """Convert a Wand image to a PIL image"""
         pil_image = Image.open(BytesIO(self.image.make_blob()))
-        return pil_image
+        self.image = pil_image
 
     def get(self):
         return self.image
 
+    def save(self):
+        print(f'{self.name}.{self.format}')
+        self.image.save(filename=f'{self.name}.{self.format}')
 
-class URLImage():
+
+class URLImage(BaseImage):
     """Class for URL stuff"""
 
     HEADERS = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:90.0) Gecko/20100101 Firefox/90.0'}
 
     def __init__(self, url: str):
+        super().__init__()
         self.url = url
         self.request = request.Request(url, headers=self.HEADERS)
+        self.name = parse_file_name(self.url)
 
-    def download_img(self, django: bool = False):
-        """Download image, converts to JPEG."""
+    def download_img(self):
+        """Download image"""
         image = Image.open(request.urlopen(self.request))
-        image = image.convert('RGB')
-        image_name = parse_file_name(self.url)
-        image_io = BytesIO()
-        # image.seek(0)
-        image.save(image_io, format='JPEG')
-        # image.save("test.jpg")
-        # image.seek(0)
+        self.image = image.convert(self.mode)
 
-        if django:
+    def check_url(self):
+        """Check URL of the image"""
+
+        is_url_image = check_url = False
+
+        # Check that if the URL is an image
+        mimetype, encoding = mimetypes.guess_type(self.url)
+        is_url_image = (mimetype and mimetype.startswith('image'))
+
+        # Check that the URL is working
+        try:
+            response = request.urlopen(self.request)
+            check_url = response.status in range(200, 209)
+        except Exception:
+            check_url = False
+
+        return is_url_image and check_url
+
+    def get(self, django_file: bool = False):
+        if django_file:
+            image_io = BytesIO()
+            # image.seek(0)
+            self.image.save(image_io, format=self.format, quality=self.quality)
             django_image = InMemoryUploadedFile(
                 file=image_io,
-                name=image_name,
+                name=self.name,
                 field_name=None,
-                content_type='image/jpeg',
+                content_type=self.content_type,
                 size=image_io.getbuffer().nbytes,  # BytesIO
                 charset=None,
             )
             return django_image
-        return image_io
-
-    def is_image_and_ready(self):
-        """Check URL of the image"""
-
-        def is_url_image():
-            """Check that if the URL is an image"""
-            mimetype, encoding = mimetypes.guess_type(self.url)
-            test = mimetypes.guess_extension(self.url)
-            return (mimetype and mimetype.startswith('image'))
-
-        def check_url():
-            """Check that the URL is working"""
-            try:
-                response = request.urlopen(self.request)
-                return response.status in range(200, 209)
-            except Exception:
-                return False
-
-        return is_url_image() and check_url()
+        return self.image
 
 
 class Util:
     """Image and URL Utilities for api project"""
 
     @staticmethod
-    def resize_image(image, width: int, height: int):
+    def resize_image(image, width: int, height: int, django: bool = True):
         """Change image size"""
         image = PILImage(image)
-        return image.resize(width, height)
+        image.resize(width, height)
+        return image.get(django_file=django)
 
     @staticmethod
     def parse_file_name(path: str, ext: bool = False) -> str:
@@ -146,28 +173,10 @@ class Util:
     @staticmethod
     def download_img(url: str, django: bool = False):
         image = URLImage(url)
-        return image.download_img(django)
+        image.download_img()
+        return image.get(django_file=django)
 
     @staticmethod
     def is_image_and_ready(url: str):
         image = URLImage(url)
-        return image.is_image_and_ready()
-
-
-if __name__ == '__main__':
-    # url = 'https://avatars.githubusercontent.com/u/1024025'
-    # url = 'https://www.w3.org/People/mimasa/test/imgformat/img/w3c_home.jpg'
-    # response = Util.is_image_and_ready(url)
-    # print(response)
-    # test = Util.download_img(url)
-    # print(test.tell())
-
-    image = WandImage('test.png')
-    # convert = image.convert_to_PIL()
-    # print(convert)
-    image.convert_to('new_image', 'heic')
-
-    # image = PILImage('test.png')
-    # convert = image.convert_to_wand(format='png')
-    # convert.rotate(90)
-    # convert.save(filename=f'convert.png')
+        return image.check_url()
