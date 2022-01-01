@@ -55,9 +55,9 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'heifmgur.urls'
 
-if DEBUG:
-    MIDDLEWARE.append('debug_toolbar.middleware.DebugToolbarMiddleware')
-    INSTALLED_APPS.extend(('debug_toolbar',))
+# if DEBUG:
+#     MIDDLEWARE.append('debug_toolbar.middleware.DebugToolbarMiddleware')
+#     INSTALLED_APPS.extend(('debug_toolbar',))
 
 TEMPLATES = [
     {
@@ -137,13 +137,13 @@ MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-# Debug Toolbar
-def show_toolbar(_):
-    return DEBUG
+# # Debug Toolbar
+# def show_toolbar(_):
+#     return DEBUG
 
 
-DEBUG_TOOLBAR_CONFIG = {
-    'SHOW_TOOLBAR_CALLBACK': 'heifmgur.settings.show_toolbar'}
+# DEBUG_TOOLBAR_CONFIG = {
+#     'SHOW_TOOLBAR_CALLBACK': 'heifmgur.settings.show_toolbar'}
 
 # REST
 REST_FRAMEWORK = {

@@ -60,7 +60,6 @@ class PILImage(BaseImage):
                 'Must provide a method in str format as a kwarg for an PIL Image object')
 
         self.image.convert(mode=self.mode)
-        test = (kwargs)
         caller = methodcaller(method, *args, **kwargs)
         self.image = caller(self.image)
 
@@ -98,6 +97,16 @@ class WandImage(BaseImage):
         self.image.format = self.format
         self.image.mode = self.mode
         self.image = self.image.convert(format=format)
+
+    def call_method(self, *args, ** kwargs):
+        method = kwargs.pop('method', None)
+        if not method:
+            raise AttributeError(
+                'Must provide a method in str format as a kwarg for a Wand Image object')
+
+        self.image.convert(mode=self.mode)
+        caller = methodcaller(method, *args, **kwargs)
+        self.image = caller(self.image)
 
     def convert_to_PIL(self):
         """Convert a Wand image to a PIL image"""
