@@ -14,15 +14,13 @@ class BaseTest(unittest.TestCase):
 
 class PILImageTest(BaseTest):
 
-    # def test_resize(self):
-    #     image = img.PILImage(self.image_path)
-    #     convert = image.convert_to_wand(format='jpeg')
-    #     convert.rotate(90)
-    #     image.get()._size
-    #     convert.save(filename=f'convert.png')
-    #     image = PILImage(image)
-    #     image.resize(width, height)
-    #     return image.get(django_file=django)
+    def test_resize(self):
+        image = img.PILImage(self.image_path)
+        size = (100, 200)
+        assert image.get()._size != size
+
+        image.call_method(method='resize', size=size)
+        assert image.get()._size == size
 
     def test_convert_Wand(self):
         image = img.PILImage(self.image_path)

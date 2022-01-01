@@ -67,7 +67,7 @@ class ImageViewSet(viewsets.ModelViewSet):
         image_name = Util.parse_file_name(
             image.picture.name, ext=True)
         new_image = Util.resize_image(
-            image_path, *new_dimensions)
+            image_path, *new_dimensions, django=True)
         image.picture.delete(save=False)
         image.picture.save(image_name, new_image)
 

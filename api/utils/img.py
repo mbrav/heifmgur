@@ -1,5 +1,6 @@
 import mimetypes
 from io import BytesIO
+from operator import methodcaller
 from urllib import parse, request
 
 from django.core.files import File
@@ -19,7 +20,7 @@ def parse_file_name(path: str, ext: bool = False) -> str:
 
 
 class BaseImage():
-    """Base Image Base class"""
+    """Base Image class"""
 
     def __init__(self):
         self.image = None
@@ -52,9 +53,16 @@ class PILImage(BaseImage):
         self.image = Image.open(filename)
         self.format = self.image.format
 
-    def resize(self, width: int, height: int):
+    def call_method(self, *args, ** kwargs):
+        method = kwargs.pop('method', None)
+        if not method:
+            raise AttributeError(
+                'Must provide a method in str format as a kwarg for an PIL Image object')
+
         self.image.convert(mode=self.mode)
-        self.image = self.image.resize(size=(width, height))
+        test = (kwargs)
+        caller = methodcaller(method, *args, **kwargs)
+        self.image = caller(self.image)
 
     def convert_to_wand(self, format: str = None):
         """Convert a PIL image to a Wand image"""
@@ -163,7 +171,7 @@ class Util:
     def resize_image(image, width: int, height: int, django: bool = True):
         """Change image size"""
         image = PILImage(image)
-        image.resize(width, height)
+        image.call_method(method='resize', size=(width, height))
         return image.get(django_file=django)
 
     @staticmethod
