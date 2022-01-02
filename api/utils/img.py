@@ -18,6 +18,11 @@ def parse_file_name(path: str, ext: bool = False) -> str:
         return file_name
     return no_extension
 
+def parse_file_extension(path: str) -> str:
+    """Get path extension .html, .jpg, etc."""
+    url = parse.urlparse(path)
+    extension = url.path.rsplit('.')[-1]
+    return extension
 
 class BaseImage():
     """Base Image class"""
@@ -132,11 +137,20 @@ class URLImage(BaseImage):
         self.url = url
         self.request = request.Request(url, headers=self.HEADERS)
         self.name = parse_file_name(self.url)
+        self.file_extension = parse_file_extension(self.url)
+        self.wand = False
 
     def download_img(self):
         """Download image"""
-        image = Image.open(request.urlopen(self.request))
-        self.image = image.convert(self.mode)
+        req = request.urlopen(self.request)
+
+        if self.file_extension in ['heic', 'heif']:
+            self.image = Wand(file=req)
+            self.content_type = 'image/' + self.file_extension
+            self.wand = True
+        else:
+            image = Image.open(req)
+            self.image = image.convert(self.mode)
 
     def check_url(self):
         """Check URL of the image"""
@@ -158,17 +172,21 @@ class URLImage(BaseImage):
 
     def get(self, django_file: bool = False):
         if django_file:
-            image_io = BytesIO()
-            # image.seek(0)
-            self.image.save(image_io, format=self.format, quality=self.quality)
+            image_io = None
+            if self.wand:
+                image_io = BytesIO(self.image.make_blob())
+            else:
+                image_io = BytesIO()
+                self.image.save(image_io, format=self.format, quality=self.quality)
+
             django_image = InMemoryUploadedFile(
                 file=image_io,
                 name=self.name,
                 field_name=None,
                 content_type=self.content_type,
                 size=image_io.getbuffer().nbytes,  # BytesIO
-                charset=None,
-            )
+                charset=None,)
+    
             return django_image
         return self.image
 
