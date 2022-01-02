@@ -13,16 +13,62 @@ def validate_file_extension(value):
     if not ext.lower() in valid_extensions:
         raise ValidationError('Unsupported file extension.')
 
-
-class HeifmgurField(models.ImageField):
-    """Custom ImageField for HEIF suport"""
+class HeifmgurModelField(models.FileField):
+    """Custom Model FileField with HEIF support
+    Essentially a copy of ImageField with width_field, height_field update 
+    functionality
+    """
 
     validators = [validate_file_extension]
+    descriptor = models.fields.files.ImageFileDescriptor
+
+    def __init__(self, verbose_name=None, name=None, width_field=None, height_field=None, **kwargs):
+        self.width_field, self.height_field = width_field, height_field
+        super().__init__(verbose_name, name, **kwargs)
+
+    def check(self, **kwargs):
+        return [
+            *super().check(**kwargs),
+            *self._check_image_library_installed(),
+        ]
+
+    def deconstruct(self):
+        name, path, args, kwargs = super().deconstruct()
+        if self.width_field:
+            kwargs['width_field'] = self.width_field
+        if self.height_field:
+            kwargs['height_field'] = self.height_field
+        return name, path, args, kwargs
+
+    def contribute_to_class(self, cls, name, **kwargs):
+        super().contribute_to_class(cls, name, **kwargs)
+        if not cls._meta.abstract:
+            models.signals.post_init.connect(self.update_dimension_fields, sender=cls)
+
+    def _check_image_library_installed(self):
+        try:
+            from wand.image import Image  # NOQA
+        except ImportError:
+            return [
+                checks.Error(
+                    'Cannot use HeifmgurModelField because Wand is not installed.',
+                    hint=('Get Wand at https://pypi.org/project/Wand/ '
+                          'or run command "python -m pip install Wand".'),
+                    obj=self,
+                    id='fields.E210',
+                )
+            ]
+        else:
+            return []
 
     def update_dimension_fields(self, instance, force=False, *args, **kwargs):
         """
         Update field's width and height fields, if defined.
         """
+ 
+        has_dimension_fields = self.width_field or self.height_field
+        if not has_dimension_fields or self.attname not in instance.__dict__:
+            return
 
         file = getattr(instance, self.attname)
 
@@ -38,12 +84,16 @@ class HeifmgurField(models.ImageField):
             return
 
         if file:
-            width = file.width
-            height = file.height
+            # TODO
+            # width = file.width
+            # height = file.height
+            width = 1111
+            height = 1111
         else:
             width = None
             height = None
 
+        # Update the width and height fields.
         if self.width_field:
             setattr(instance, self.width_field, width)
         if self.height_field:

@@ -9,6 +9,10 @@ class ImageSerializer(serializers.ModelSerializer):
     Base Image serializer
     """
 
+    picture = serializers.FileField(
+        required=False,
+    )
+
     def validate(self, attrs):
         if attrs.get('url', None) and attrs.get('picture', None):
             raise serializers.ValidationError(

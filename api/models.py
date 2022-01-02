@@ -1,11 +1,11 @@
 from django.db import models
 
-from .fields import HeifmgurField
+from .fields import HeifmgurModelField
 
 
 class Image(models.Model):
 
-    picture = HeifmgurField(
+    picture = HeifmgurModelField(
         'Image',
         help_text='Specify image file',
         upload_to='%Y/%m/%d',
