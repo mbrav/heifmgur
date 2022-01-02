@@ -18,11 +18,13 @@ def parse_file_name(path: str, ext: bool = False) -> str:
         return file_name
     return no_extension
 
+
 def parse_file_extension(path: str) -> str:
     """Get path extension .html, .jpg, etc."""
     url = parse.urlparse(path)
     extension = url.path.rsplit('.')[-1]
     return extension
+
 
 class BaseImage():
     """Base Image class"""
@@ -94,13 +96,19 @@ class WandImage(BaseImage):
         self.format = self.image.format
         if kwargs.get('filename', None):
             self.name = parse_file_name(kwargs.get('filename'))
+        file = kwargs.get('file', None)
+        if file:
+            if file.url:
+                name = parse_file_name(file.url)
+                self.name = name
 
     def convert_to(self, format: str = None):
+        if format == self.format:
+            return
         if not format:
             format = self.format
-        else:
-            self.format = format
-        self.image.format = self.format
+        self.format = format
+        self.image.format = format
         self.image.mode = self.mode
         self.image = self.image.convert(format=format)
 
@@ -110,21 +118,41 @@ class WandImage(BaseImage):
             raise AttributeError(
                 'Must provide a method in str format as a kwarg for a Wand Image object')
 
-        caller = methodcaller(method, *args, **kwargs)
-        caller(self.image)
+        if method == 'resize':
+            width = kwargs.pop('width', None)
+            height = kwargs.pop('height', None)
+            self.image.resize(width, height)
+            return
+
+        raise AttributeError(
+            'New methods under work')
+
+        # TODO
+        # caller = methodcaller(method, *args, **kwargs)
+        # caller(self.image)
 
     def convert_to_PIL(self):
         """Convert a Wand image to a PIL image"""
         pil_image = Image.open(BytesIO(self.image.make_blob()))
         self.image = pil_image
 
-    def get(self):
+    def get(self, django_file: bool = False):
+        if django_file:
+            image_io = BytesIO(self.image.make_blob())
+            django_image = InMemoryUploadedFile(
+                file=image_io,
+                name=f'{self.name}.{self.format}',
+                field_name=None,
+                content_type=self.content_type,
+                size=image_io.getbuffer().nbytes,  # BytesIO
+                charset=None,)
+            return django_image
         return self.image
 
     def save(self):
         print(f'{self.name}.{self.format}')
         self.image.save(filename=f'{self.name}.{self.format}')
-
+        
 
 class URLImage(BaseImage):
     """Class for URL stuff"""
@@ -137,17 +165,20 @@ class URLImage(BaseImage):
         self.url = url
         self.request = request.Request(url, headers=self.HEADERS)
         self.name = parse_file_name(self.url)
-        self.file_extension = parse_file_extension(self.url)
-        self.wand = False
+        self.format = parse_file_extension(self.url)
+        self.wand = None
 
-    def download_img(self):
+    def download_img(self, to_heif: bool = False):
         """Download image"""
         req = request.urlopen(self.request)
 
-        if self.file_extension in ['heic', 'heif']:
-            self.image = Wand(file=req)
-            self.content_type = 'image/' + self.file_extension
-            self.wand = True
+        is_heif = self.format in ['heic', 'heif']
+        if to_heif or is_heif:
+            self.wand = WandImage(file=req)
+            if not is_heif:
+                self.wand.convert_to('heif')
+                self.format = 'heif'
+            self.wand.content_type = 'image/' + self.format
         else:
             image = Image.open(req)
             self.image = image.convert(self.mode)
@@ -174,19 +205,22 @@ class URLImage(BaseImage):
         if django_file:
             image_io = None
             if self.wand:
-                image_io = BytesIO(self.image.make_blob())
+                image_io = BytesIO(self.image.wand.make_blob())
             else:
                 image_io = BytesIO()
-                self.image.save(image_io, format=self.format, quality=self.quality)
+                self.image.save(
+                    image_io,
+                    format=self.format,
+                    quality=self.quality)
 
             django_image = InMemoryUploadedFile(
                 file=image_io,
-                name=self.name,
+                name=f'{self.name}.{self.format}',
                 field_name=None,
                 content_type=self.content_type,
                 size=image_io.getbuffer().nbytes,  # BytesIO
                 charset=None,)
-    
+
             return django_image
         return self.image
 
@@ -195,8 +229,15 @@ class Util:
     """Image and URL Utilities for api project"""
 
     @staticmethod
-    def resize_image(path: str, width: int, height: int, django: bool = True):
+    def resize_image(path: str, width: int, height: int, django: bool = False):
         """Change image size"""
+        image = WandImage(filename=path)
+        image.call_method(method='resize', width=width, height=height)
+        return image.get(django_file=django)
+
+    @staticmethod
+    def resize_image_PIL(path: str, width: int, height: int, django: bool = False):
+        """Change image size with PIL library"""
         image = PILImage(path)
         image.call_method(method='resize', size=(width, height))
         return image.get(django_file=django)
@@ -207,21 +248,25 @@ class Util:
 
     @staticmethod
     def get_dimensions_from_path(path: str) -> tuple:
-        image = WandImage(path)
+        image = WandImage(filename=path)
         dimensions = (image.image.width, image.image.height)
         return dimensions
 
     @staticmethod
     def get_dimensions_from_file(file: File) -> tuple:
-        image = WandImage(blob = file.file)
+        image = WandImage(blob=file.file)
         dimensions = (image.image.width, image.image.height)
         return dimensions
 
     @staticmethod
-    def download_img(url: str, django: bool = False):
-        image = URLImage(url)
-        image.download_img()
-        return image.get(django_file=django)
+    def download_img(url: str, django: bool = False, to_heif: bool = False):
+        url_img = URLImage(url)
+        url_img.download_img(to_heif=to_heif)
+
+        # If image to heif is enforced and image is not in heif format
+        if to_heif:
+            return url_img.wand.get(django_file=django)
+        return url_img.get(django_file=django)
 
     @staticmethod
     def is_image_and_ready(url: str):

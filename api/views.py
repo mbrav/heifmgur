@@ -26,12 +26,10 @@ class ImageViewSet(viewsets.ModelViewSet):
         if image and not name:
             new_data['name'] = image.name
         if url:
-            name = Util.parse_file_name(url, ext=True)
-            new_image = Util.download_img(url, django=True)
-            new_image.name = name
+            new_image = Util.download_img(url, django=True, to_heif=True)
             new_data['picture'] = new_image
             if not name:
-                new_data['name'] = name
+                new_data['name'] = new_image.name
 
         new_data._mutable = False
         serializer.save(**new_data)
