@@ -12,17 +12,17 @@ class ImageSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         if attrs.get('url', None) and attrs.get('picture', None):
             raise serializers.ValidationError(
-                {'error': 'Вы мне можете оправить ссылку и фаил одновременно'})
+                {'error': 'You can send a URL and a file at the same time'})
 
         if not attrs.get('url', None) and not attrs.get('picture', None):
             raise serializers.ValidationError(
-                {'error': 'Пожалуйста укажите ссылку либо фаил изображения'})
+                {'error': 'Please provide a URLr image file'})
 
         if attrs.get('url', None):
             good_url = Util.is_image_and_ready(attrs['url'])
             if not good_url:
                 raise serializers.ValidationError(
-                    {'error': 'Ошибка валидации ссылки на изображение'})
+                    {'error': 'URL validation error'})
         return attrs
 
     class Meta:
@@ -34,10 +34,10 @@ class ImageSerializer(serializers.ModelSerializer):
 
 class ImageUpdateSerializer(serializers.ModelSerializer):
     """
-    Image сериализатор для UPDATE запросов
-    + дополнительная функция
+    Image serializer for UPDATE queries
+    + additional function
 
-    Изменять можно только name и parent_picture
+    Only name and parent_picture can be changed
     """
 
     class Meta(ImageSerializer.Meta):

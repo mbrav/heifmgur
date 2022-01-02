@@ -14,5 +14,5 @@ class Image(admin.ModelAdmin):
         'width',
         'height',
     )
-    empty_value_display = '-пусто-'
+    empty_value_display = '-empty-'
     exclude = ('width', 'height',)
