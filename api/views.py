@@ -12,12 +12,6 @@ from .utils.img import Util
 class ImageViewSet(viewsets.ModelViewSet):
     queryset = Image.objects.all()
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def perform_create(self, serializer):
         """Download image via URL
@@ -77,10 +71,10 @@ class ImageViewSet(viewsets.ModelViewSet):
             status=status.HTTP_201_CREATED)
 
     def get_serializer_class(self):
-        # Кастомный сериалайзер для resize
+        # Custom serializer for resize
         if self.action == 'resize':
             return ImageResizeSerializer
-        # Кастомный сериалайзер для update
+        # Custom serializer for update
         if self.action == 'update':
             return ImageUpdateSerializer
         return ImageSerializer

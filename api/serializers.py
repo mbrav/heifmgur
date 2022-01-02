@@ -12,7 +12,7 @@ class ImageSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         if attrs.get('url', None) and attrs.get('picture', None):
             raise serializers.ValidationError(
-                {'error': 'You can send a URL and a file at the same time'})
+                {'error': 'You cannot send a URL and a file at the same time'})
 
         if not attrs.get('url', None) and not attrs.get('picture', None):
             raise serializers.ValidationError(

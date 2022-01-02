@@ -18,15 +18,15 @@ class PILImageTest(BaseTest):
     def test_resize(self):
         image = PILImage(self.image_path)
         size = (100, 200)
-        assert image.get()._size != size
+        assert image.get()._size != size, 'Image has the same size already'
 
         image.call_method(method='resize', size=size)
-        assert image.get()._size == size
+        assert image.get()._size == size, 'Image has not been resized to the specified dimensions'
 
     def test_convert_Wand(self):
         image = PILImage(self.image_path)
         image.convert_to_wand()
-        assert image.get().wand
+        assert image.get().wand, 'Image is not a Wand instance'
 
 
 class WandImageTest(BaseTest):
@@ -34,7 +34,7 @@ class WandImageTest(BaseTest):
     def test_resize(self):
         image = WandImage(self.image_path)
         size = (100, 200)
-        assert image.get().size != size
+        assert image.get().size != size, 'Image has the same size already'
 
         # image.call_method(method='resize', width=size[0], height=size[1])
         # assert image.get()._size == size
@@ -42,13 +42,13 @@ class WandImageTest(BaseTest):
     def test_convert_PIL(self):
         image = WandImage(self.image_path)
         image.convert_to_PIL()
-        assert image.get()._size == (1460, 366)
+        assert image.get()._size == (1460, 366), 'Wrong Image'
 
     def test_convert_to_heic(self):
         image = WandImage(self.image_path)
         image.convert_to('heic')
         converted_image = image.get()
-        assert image.get().format == 'HEIC'
+        assert image.get().format == 'HEIC', 'Image was not converted to .heic format'
 
 
 class URLImageTest(BaseTest):
@@ -56,13 +56,13 @@ class URLImageTest(BaseTest):
     def test_check_url(self):
         image = URLImage(self.url)
         status = image.check_url()
-        assert status == True
+        assert status == True, 'URL to Image is not available'
 
     def test_download(self):
         image = URLImage(self.url)
         image.download_img()
         image_name = image.get()._size
-        assert image_name == (72, 48)
+        assert image_name == (72, 48), 'URL to Image does not have the correct size'
 
 
 class UtilTest(BaseTest):
