@@ -4,6 +4,8 @@ from django.core import validators
 from django.core.exceptions import ValidationError
 from django.db import models
 
+from api.utils.img import Util
+
 
 def validate_file_extension(value):
     ext = os.path.splitext(value.name)[1]
@@ -84,11 +86,9 @@ class HeifmgurModelField(models.FileField):
             return
 
         if file:
-            # TODO
-            # width = file.width
-            # height = file.height
-            width = 1111
-            height = 1111
+            dimensions = Util.get_dimensions_from_file(file)
+            width = dimensions[0]
+            height = dimensions[1]
         else:
             width = None
             height = None

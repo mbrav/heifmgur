@@ -83,11 +83,12 @@ class PILImage(BaseImage):
 class WandImage(BaseImage):
     """Class for Imagemagick's Wand Image"""
 
-    def __init__(self, filename: str):
+    def __init__(self, *args, **kwargs):
         super().__init__()
-        self.image = Wand(filename=filename)
+        self.image = Wand(*args, **kwargs)
         self.format = self.image.format
-        self.name = parse_file_name(filename)
+        if kwargs.get('filename', None):
+            self.name = parse_file_name(kwargs.get('filename'))
 
     def convert_to(self, format: str = None):
         if not format:
@@ -176,15 +177,27 @@ class Util:
     """Image and URL Utilities for api project"""
 
     @staticmethod
-    def resize_image(image, width: int, height: int, django: bool = True):
+    def resize_image(path: str, width: int, height: int, django: bool = True):
         """Change image size"""
-        image = PILImage(image)
+        image = PILImage(path)
         image.call_method(method='resize', size=(width, height))
         return image.get(django_file=django)
 
     @staticmethod
     def parse_file_name(path: str, ext: bool = False) -> str:
         return parse_file_name(path, ext)
+
+    @staticmethod
+    def get_dimensions_from_path(path: str) -> tuple:
+        image = WandImage(path)
+        dimensions = (image.image.width, image.image.height)
+        return dimensions
+
+    @staticmethod
+    def get_dimensions_from_file(file: File) -> tuple:
+        image = WandImage(blob = file.file)
+        dimensions = (image.image.width, image.image.height)
+        return dimensions
 
     @staticmethod
     def download_img(url: str, django: bool = False):

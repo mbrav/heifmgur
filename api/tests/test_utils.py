@@ -2,7 +2,7 @@ import sys
 import unittest
 from pathlib import Path
 
-from api.utils.img import PILImage, URLImage, WandImage
+from api.utils.img import PILImage, URLImage, Util, WandImage
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 MEDIA_DIR = f'{BASE_DIR}/media'
@@ -32,7 +32,7 @@ class PILImageTest(BaseTest):
 class WandImageTest(BaseTest):
 
     def test_resize(self):
-        image = WandImage(self.image_path)
+        image = WandImage(filename=self.image_path)
         size = (100, 200)
         assert image.get().size != size, 'Image has the same size already'
 
@@ -40,12 +40,12 @@ class WandImageTest(BaseTest):
         # assert image.get()._size == size
 
     def test_convert_PIL(self):
-        image = WandImage(self.image_path)
+        image = WandImage(filename=self.image_path)
         image.convert_to_PIL()
         assert image.get()._size == (1460, 366), 'Wrong Image'
 
     def test_convert_to_heic(self):
-        image = WandImage(self.image_path)
+        image = WandImage(filename=self.image_path)
         image.convert_to('heic')
         converted_image = image.get()
         assert image.get().format == 'HEIC', 'Image was not converted to .heic format'
@@ -66,7 +66,10 @@ class URLImageTest(BaseTest):
 
 
 class UtilTest(BaseTest):
-    pass
+
+    def get_dimensions_from_path(self):
+        dimensions = Util.get_dimensions(self.image_path)
+        assert dimensions == (1460, 366)
 
 
 if __name__ == '__main__':
