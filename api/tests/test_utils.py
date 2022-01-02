@@ -2,7 +2,7 @@ import sys
 import unittest
 from pathlib import Path
 
-from api.utils import img
+from api.utils.img import PILImage, URLImage, WandImage
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 MEDIA_DIR = f'{BASE_DIR}/media'
@@ -16,7 +16,7 @@ class BaseTest(unittest.TestCase):
 class PILImageTest(BaseTest):
 
     def test_resize(self):
-        image = img.PILImage(self.image_path)
+        image = PILImage(self.image_path)
         size = (100, 200)
         assert image.get()._size != size
 
@@ -24,7 +24,7 @@ class PILImageTest(BaseTest):
         assert image.get()._size == size
 
     def test_convert_Wand(self):
-        image = img.PILImage(self.image_path)
+        image = PILImage(self.image_path)
         image.convert_to_wand()
         assert image.get().wand
 
@@ -32,20 +32,20 @@ class PILImageTest(BaseTest):
 class WandImageTest(BaseTest):
 
     def test_resize(self):
-        image = img.WandImage(self.image_path)
+        image = WandImage(self.image_path)
         size = (100, 200)
         assert image.get().size != size
 
-        # image.call_method(method='resize', size=size)
+        # image.call_method(method='resize', width=size[0], height=size[1])
         # assert image.get()._size == size
 
     def test_convert_PIL(self):
-        image = img.WandImage(self.image_path)
+        image = WandImage(self.image_path)
         image.convert_to_PIL()
         assert image.get()._size == (1460, 366)
 
     def test_convert_to_heic(self):
-        image = img.WandImage(self.image_path)
+        image = WandImage(self.image_path)
         image.convert_to('heic')
         converted_image = image.get()
         assert image.get().format == 'HEIC'
@@ -54,12 +54,12 @@ class WandImageTest(BaseTest):
 class URLImageTest(BaseTest):
 
     def test_check_url(self):
-        image = img.URLImage(self.url)
+        image = URLImage(self.url)
         status = image.check_url()
         assert status == True
 
     def test_download(self):
-        image = img.URLImage(self.url)
+        image = URLImage(self.url)
         image.download_img()
         image_name = image.get()._size
         assert image_name == (72, 48)

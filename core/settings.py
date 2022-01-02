@@ -53,7 +53,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'heifmgur.urls'
+ROOT_URLCONF = 'core.urls'
 
 # if DEBUG:
 #     MIDDLEWARE.append('debug_toolbar.middleware.DebugToolbarMiddleware')
@@ -75,7 +75,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'heifmgur.wsgi.application'
+WSGI_APPLICATION = 'core.wsgi.application'
 
 
 # Database
@@ -143,7 +143,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 # DEBUG_TOOLBAR_CONFIG = {
-#     'SHOW_TOOLBAR_CALLBACK': 'heifmgur.settings.show_toolbar'}
+#     'SHOW_TOOLBAR_CALLBACK': 'core.settings.show_toolbar'}
 
 # REST
 REST_FRAMEWORK = {

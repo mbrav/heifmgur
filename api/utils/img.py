@@ -104,9 +104,8 @@ class WandImage(BaseImage):
             raise AttributeError(
                 'Must provide a method in str format as a kwarg for a Wand Image object')
 
-        self.image.convert(mode=self.mode)
         caller = methodcaller(method, *args, **kwargs)
-        self.image = caller(self.image)
+        caller(self.image)
 
     def convert_to_PIL(self):
         """Convert a Wand image to a PIL image"""

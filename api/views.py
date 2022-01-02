@@ -20,8 +20,8 @@ class ImageViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def perform_create(self, serializer):
-        """Скачиваем изображение через URL 
-        и автоматически присваиваем имя, если оно не дано"""
+        """Download image via URL
+        and automatically assign a name if it is not given"""
 
         new_data = serializer.validated_data
         new_data._mutable = True

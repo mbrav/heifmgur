@@ -9,13 +9,13 @@ class ImageURLTests(TestModelFactory):
     """Тест URL"""
 
     def test_images_list(self):
-        """Страница /api/images/ доступна"""
+        """The page/api/images/is available"""
         url = reverse('images-list')
         response = self.guest_client.get(url)
         self.assertEqual(response.status_code, 200)
 
     def test_images_list_post(self):
-        """Страница /api/images/ принимает POST запросы"""
+        """The page/api/images/accepts POST requests"""
 
         url = reverse('images-list')
         data = {
@@ -30,13 +30,13 @@ class ImageURLTests(TestModelFactory):
         self.number_of_images += 1
 
     def test_images_detail_get(self):
-        """Страница /api/images/<id>/ доступна"""
+        """The page/api/images/<id>/ is available"""
         url = reverse('images-detail', args=[self.image.id])
         response = self.guest_client.get(url)
         self.assertEqual(response.status_code, 200)
 
     # def test_images_detail_put(self):
-    #     """Страница /api/images/<id>/ принимает PUT запросы"""
+    #     """The page/api/images/<id>/ accepts PUT requests"""
     #     url = reverse('images-detail', args=[self.image.id])
 
     #     data = {
@@ -50,14 +50,14 @@ class ImageURLTests(TestModelFactory):
     #     self.assertEqual(request.status_code, 201)
 
     def test_images_resize_get(self):
-        """Страница /api/images/<id>/resize/ не принимает GET запросы"""
+        """The page/api/images/<id>/resize/ does not accept GET requests"""
         url = reverse('images-detail', args=[self.image.id])
         response = self.guest_client.get(url+'resize/')
         self.assertEqual(response.status_code, 405)
 
     def test_images_resize_post(self):
-        """Страница /api/images/<id>/resize/ принимает POST запросы
-            и изменяет изображения
+        """The page /api/images/<id>/resize/ accepts POST requests
+        and changes images
         """
         url = reverse('images-detail', args=[self.image.id])
 
@@ -76,7 +76,7 @@ class ImageURLTests(TestModelFactory):
         self.assertEqual(response.status_code, 201)
 
     def test_images_id_delete_url(self):
-        """Страница /api/images/<id>/ с DELETE запросом работает"""
+        """The page /api/images/<id>/ works with a DELETE request"""
 
         img_id = self.number_of_images // 2
         url = reverse('images-detail', args=[img_id])
@@ -86,3 +86,17 @@ class ImageURLTests(TestModelFactory):
         self.assertEqual(response.status_code, 204)
         self.assertEqual(count+1, self.number_of_images)
         self.number_of_images -= 1
+
+    def tearDown(self):
+        """All images get deleted /api/images/<id>/ through DELETE request"""
+        images = Image.objects.all()
+        count = images.count
+
+        for img in images:
+            url = reverse('images-detail', args=[img.id])
+            self.guest_client.delete(url)
+
+        new_count = Image.objects.all().count()
+        self.assertNotEqual(new_count, count)
+        self.assertEqual(new_count, 0)
+
