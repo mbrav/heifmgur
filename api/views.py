@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from .models import Image
 from .serializers import (ImageResizeSerializer, ImageSerializer,
                           ImageUpdateSerializer)
+from .throttlers import *
 from .utils.img import Util
 
 
@@ -81,3 +82,12 @@ class ImageViewSet(viewsets.ModelViewSet):
         if self.action == 'update':
             return ImageUpdateSerializer
         return ImageSerializer
+
+    def get_throttles(self):
+        if self.action == 'list':
+            throttle_classes = [ListThrottleBurst, ListThrottleSustained]
+        elif self.action in ['update', 'partial_update', 'resize', 'create']:
+            throttle_classes = [ActionThrottleBurst, ActionThrottleSustained]
+        else:
+            throttle_classes = [DetailThrottleBurst, DetailThrottleSustained]
+        return [throttle() for throttle in throttle_classes]
