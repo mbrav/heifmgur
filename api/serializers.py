@@ -61,6 +61,10 @@ class ImageResizeSerializer(serializers.ModelSerializer):
         if value < 1:
             raise serializers.ValidationError(
                 'Number must not be lower than 1')
+        if value > 4000:
+            raise serializers.ValidationError(
+                'Cannot resize to over 4000 pixels.'
+                'We are not a f***ing Google Data Center')
 
     height = serializers.IntegerField(
         required=True,
