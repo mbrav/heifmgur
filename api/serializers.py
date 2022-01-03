@@ -20,13 +20,17 @@ class ImageSerializer(serializers.ModelSerializer):
 
         if not attrs.get('url', None) and not attrs.get('picture', None):
             raise serializers.ValidationError(
-                {'error': 'Please provide a URLr image file'})
+                {'error': 'Please provide a URL image file'})
 
         if attrs.get('url', None):
             good_url = Util.is_image_and_ready(attrs['url'])
             if not good_url:
                 raise serializers.ValidationError(
                     {'error': 'URL validation error'})
+
+        if attrs.get('picture', None):
+            Util.is_image_validator(attrs['picture'])
+
         return attrs
 
     class Meta:

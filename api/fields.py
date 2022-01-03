@@ -1,19 +1,9 @@
 import os
 
-from django.core import validators
-from django.core.exceptions import ValidationError
 from django.db import models
 
 from api.utils.img import Util
 
-
-def validate_file_extension(value):
-    ext = os.path.splitext(value.name)[1]
-    ext = ext.replace('.', '')
-    valid_extensions = validators.get_available_image_extensions()
-    valid_extensions += ['heif', 'heic']
-    if not ext.lower() in valid_extensions:
-        raise ValidationError('Unsupported file extension.')
 
 class HeifmgurModelField(models.FileField):
     """Custom Model FileField with HEIF support
@@ -21,7 +11,7 @@ class HeifmgurModelField(models.FileField):
     functionality
     """
 
-    validators = [validate_file_extension]
+    validators = [Util.is_image_validator]
     descriptor = models.fields.files.ImageFileDescriptor
 
     def __init__(self, verbose_name=None, name=None, width_field=None, height_field=None, **kwargs):
@@ -45,7 +35,8 @@ class HeifmgurModelField(models.FileField):
     def contribute_to_class(self, cls, name, **kwargs):
         super().contribute_to_class(cls, name, **kwargs)
         if not cls._meta.abstract:
-            models.signals.post_init.connect(self.update_dimension_fields, sender=cls)
+            models.signals.post_init.connect(
+                self.update_dimension_fields, sender=cls)
 
     def _check_image_library_installed(self):
         try:
@@ -67,7 +58,7 @@ class HeifmgurModelField(models.FileField):
         """
         Update field's width and height fields, if defined.
         """
- 
+
         has_dimension_fields = self.width_field or self.height_field
         if not has_dimension_fields or self.attname not in instance.__dict__:
             return

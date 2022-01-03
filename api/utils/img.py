@@ -1,12 +1,15 @@
 import mimetypes
+import os
 from io import BytesIO
 from operator import methodcaller
 from urllib import parse, request
 
+from django.core.exceptions import ValidationError
 from django.core.files import File
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from PIL import Image
 from wand.image import Image as Wand
+from wand.version import formats as wand_formats
 
 
 def parse_file_name(path: str, ext: bool = False) -> str:
@@ -24,6 +27,20 @@ def parse_file_extension(path: str) -> str:
     url = parse.urlparse(path)
     extension = url.path.rsplit('.')[-1]
     return extension
+
+
+def validate_file_extension(value):
+    ext = os.path.splitext(value.name)[1]
+    ext = ext.replace('.', '')
+    valid_extensions = []
+    valid_extensions += wand_formats('PNG*')
+    valid_extensions += wand_formats('HEI*')
+    valid_extensions += ['JPEG', 'JPG', 'ICO']
+    if not ext.upper() in valid_extensions:
+        message = {
+            'error': f'{ext.upper()} is an unsupported image extension.',
+            'extensions': valid_extensions}
+        raise ValidationError(message)
 
 
 class BaseImage():
@@ -48,7 +65,7 @@ class BaseImage():
         files = mimetypes.knownfiles
         guessed = mimetypes.guess_type(self.name_ext)
         if not len(guessed):
-            raise ValueError('Mime type unknown')
+            raise ValidationError('Mime type unknown')
         return guessed[0]
 
     def set_format_settings(
@@ -291,3 +308,7 @@ class Util:
     def is_image_and_ready(url: str):
         image = URLImage(url)
         return image.check_url()
+
+    @staticmethod
+    def is_image_validator(file: InMemoryUploadedFile):
+        validate_file_extension(file)
