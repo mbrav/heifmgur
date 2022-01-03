@@ -1,0 +1,73 @@
+name: Django and Pytest CI
+on:
+    push:
+        branches:
+            - "**"
+    pull_request:
+        branches:
+            - "**"
+jobs:
+    test:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Check out repository
+              uses: actions/checkout@v2
+            - name: Set up python
+              id: setup-python
+              uses: actions/setup-python@v2
+              with:
+                  python-version: "3.10"
+            # - name: Build Imagemagick with HEIF Support
+            #   run: |
+            #       sudo sed -Ei 's/^# deb-src /deb-src /' /etc/apt/sources.list
+            #       sudo apt-get update
+            #       sudo apt-get install build-essential autoconf libtool git-core
+            #       sudo apt-get build-dep imagemagick libmagickcore-dev libde265 libheif
+            #       cd /usr/src/
+            #       sudo git clone https://github.com/strukturag/libde265.git
+            #       sudo git clone https://github.com/strukturag/libheif.git
+            #       cd libde265/
+            #       sudo ./autogen.sh
+            #       sudo ./configure
+            #       sudo make
+            #       sudo make install
+            #       cd /usr/src/libheif/
+            #       sudo ./autogen.sh
+            #       sudo ./configure
+            #       sudo make
+            #       sudo make install
+            #       cd /usr/src/
+            #       sudo wget https://www.imagemagick.org/download/ImageMagick.tar.gz
+            #       sudo tar xf ImageMagick.tar.gz
+            #       cd ImageMagick-7*
+            #       sudo ./configure --with-heic=yes
+            #       sudo make
+            #       sudo make install
+            #       sudo ldconfig
+            - name: Install Poetry
+              uses: snok/install-poetry@v1
+              with:
+                  virtualenvs-create: true
+                  virtualenvs-in-project: true
+                  installer-parallel: true
+            - name: Load cached venv
+              id: cached-poetry-dependencies
+              uses: actions/cache@v2
+              with:
+                  path: .venv
+                  key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+            - name: Install dependencies
+              if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+              run: poetry install --no-interaction --no-root
+            - name: Install library
+              run: poetry install --no-interaction
+            - name: Run Django migrations
+              run: |
+                  source .venv/bin/activate
+                  python manage.py makemigrations
+                  python manage.py migrate
+            # - name: Run Django Tests
+            #   run: |
+            #       source .venv/bin/activate
+            #       python manage.py test
+            #       coverage report

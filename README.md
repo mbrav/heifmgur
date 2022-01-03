@@ -4,7 +4,7 @@
     </a>
 </p>
 
-<h1 align="center">heifmgur</h2>
+[![Django and Pytest CI](https://github.com/mbrav/heifmgur/actions/workflows/django.yml/badge.svg?event=release)](https://github.com/mbrav/heifmgur/actions/workflows/django.yml)
 
 <p align="center">Image upload service API in Django using High Efficiency Image File Format (HEIF)</p>
 
@@ -14,11 +14,11 @@ This project is a continuation of a job interview assignment. The intention was 
 
 -   [ Support for HEIF #2806 ](https://github.com/python-pillow/Pillow/issues/2806)
 
-While there are existing python libraries that can decode HEIF files, there are none that **encode** into HEIF. Fortunately, there is an exception by using the Python [`Wand` library](https://pypi.org/project/Wand/) which is a wrapper for ImageMagick command tool. Although it must be system installed in order for the Python library to work, it does contain contain a HEIF decoder. This is why the project uses Wand and [Pillow-SIMD](https://python-pillow.org/pillow-perf/) to [bounce back files](api/utils/img.py) between them. Although Wand is faster than Pillow, it is slower than the x86 performance-optimized Pillow-SIMD.
+While there are existing python libraries that can decode HEIF files, there are none that **encode** into HEIF. Fortunately, there is an exception by using the Python [Wand library](https://pypi.org/project/Wand/) which is a wrapper for ImageMagick command tool. Although it must be system installed in order for the Python library to work, it does contain contain a HEIF decoder. This is why the project uses Wand and [Pillow-SIMD](https://python-pillow.org/pillow-perf/) to [bounce back files](api/utils/img.py) between them. Although Wand is faster than Pillow, it is slower than the x86 performance-optimized Pillow-SIMD.
 
-Due to lack of HEIF support in Pillow, Django's ImageField does not support the format since it uses Pillow for image validation. As a result, a custom field based on Django's FileField had to be written with image validation using the Wand library.
+Due to lack of HEIF support in Pillow, Django's ImageField does not support the format since it uses Pillow for image validation. As a result, a custom field based on Django's FileField had to be written with image validation using the Wand library, which leverages ImageMgick's usage of [libheif](https://github.com/strukturag/libheif) library.
 
-Although writing this project was interesting, I rather wish Nokia Corporation to go bankrupt unless it open sources the HEIC format and allow it to flourish. 
+Although writing this project was interesting, I rather wish Nokia Corporation to go bankrupt unless it open sources the HEIC format and allow it to flourish.
 
 ## Instructions
 
