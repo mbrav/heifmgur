@@ -43,13 +43,18 @@ class ImageSerializer(serializers.ModelSerializer):
 class ImageUpdateSerializer(serializers.ModelSerializer):
     """
     Image serializer for UPDATE queries
-    + additional function
 
-    Only name and parent_picture can be changed
+    Only name, description and parent_picture can be changed
     """
 
+    def validate_parent_picture(self, parent_picture):
+        if parent_picture.id == self.instance.id:
+            raise serializers.ValidationError(
+                {'error': 'Cannot assign a parent\'s picture to itself'})
+        return parent_picture
+
     class Meta(ImageSerializer.Meta):
-        read_only_fields = ('url', 'picture', 'height', 'width', 'description')
+        read_only_fields = ('url', 'picture', 'height', 'width')
 
 
 class ImageResizeSerializer(serializers.ModelSerializer):
