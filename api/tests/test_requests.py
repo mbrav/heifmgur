@@ -99,4 +99,3 @@ class ImageURLTests(TestModelFactory):
         new_count = Image.objects.all().count()
         self.assertNotEqual(new_count, count)
         self.assertEqual(new_count, 0)
-

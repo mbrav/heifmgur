@@ -3,7 +3,7 @@ from io import BytesIO
 
 from api.models import Image as ImageModel
 from django.core.files.uploadedfile import InMemoryUploadedFile
-from django.test import Client, TestCase
+from django.test import Client, TestCase, override_settings
 from PIL import Image, ImageDraw, ImageFont
 from rest_framework.test import APIRequestFactory
 
@@ -38,7 +38,7 @@ def createFunTestImage(name, size=None, color=None):
         d.multiline_text(rand_size, rand_letter, font=fnt, fill=rand_color)
 
     d.multiline_text((10, size[1] - 20), img_name,
-                        font=fnt, fill=contrast_color)
+                     font=fnt, fill=contrast_color)
 
     im_io = BytesIO()
     im.save(im_io, 'JPEG')
@@ -48,6 +48,21 @@ def createFunTestImage(name, size=None, color=None):
         im_io, None, img_name, 'image/jpeg', len(im_io.getvalue()), None)
     return image
 
+
+settings = {
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '1000/minute',
+        'list.burst': '1000/minute',
+        'list.sustained': '1000/day',
+        'detail.burst': '2000/minute',
+        'detail.sustained': '2000/day',
+        'action.burst': '500/minute',
+        'action.sustained': '500/day',
+    },
+}
+
+
+@override_settings(REST_FRAMEWORK=settings)
 class TestModelFactory(TestCase):
     """Обобществлённый завод для создания моделей"""
 
