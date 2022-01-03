@@ -65,8 +65,8 @@ class URLImageTest(BaseTest):
     def test_download(self):
         image = URLImage(self.url)
         image.download_img()
-        image_name = image.get()._size
-        assert image_name == (
+        size = image.get().image.size
+        assert size == (
             72, 48), 'URL to Image does not have the correct size'
 
 

@@ -57,7 +57,7 @@ class BaseImage():
 
     @property
     def name_ext(self):
-        return f'{self.name}.{self.format}'
+        return f'{self.name}.{self.format.lower()}'
 
     @property
     def content_type(self):
@@ -202,15 +202,10 @@ class URLImage(BaseImage):
     def download_img(self, to_heif: bool = False):
         """Download image"""
         req = request.urlopen(self.request)
-
+        self.wand = WandImage(file=req)
         is_heif = self.format in ['heic', 'heif']
-        if to_heif or is_heif:
-            self.wand = WandImage(file=req)
-            if not is_heif:
-                self.wand.convert_to('heif')
-        else:
-            image = Image.open(req)
-            self.pil = image.convert(self.mode)
+        if not is_heif:
+            self.wand.convert_to('heif')
 
     def check_url(self):
         """Check URL of the image"""
@@ -232,16 +227,7 @@ class URLImage(BaseImage):
 
     def get(self, django_file: bool = False):
         if django_file:
-            image_io = None
-            if self.wand:
-                image_io = BytesIO(self.wand.make_blob())
-            elif self.pil:
-                image_io = BytesIO()
-                self.pil.save(
-                    image_io,
-                    format=self.format,
-                    quality=self.quality)
-
+            image_io = BytesIO(self.wand.make_blob())
             django_image = InMemoryUploadedFile(
                 file=image_io,
                 name=self.name_ext,
@@ -249,9 +235,8 @@ class URLImage(BaseImage):
                 content_type=self.content_type,
                 size=image_io.getbuffer().nbytes,  # BytesIO
                 charset=None,)
-
             return django_image
-        return self.image
+        return self.wand
 
 
 class Util:
