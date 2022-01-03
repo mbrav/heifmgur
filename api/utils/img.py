@@ -109,6 +109,7 @@ class WandImage(BaseImage):
             format = self.format
         self.format = format
         self.image.format = format
+        self.content_type = 'image/' + format
         self.image.mode = self.mode
         self.image = self.image.convert(format=format)
 
@@ -229,7 +230,15 @@ class Util:
     """Image and URL Utilities for api project"""
 
     @staticmethod
-    def resize_image(path: str, width: int, height: int, django: bool = False):
+    def parse_file_name(path: str, ext: bool = False) -> str:
+        return parse_file_name(path, ext)
+
+    @staticmethod
+    def parse_file_extension(path: str) -> str:
+        return parse_file_extension(path)
+
+    @staticmethod
+    def resize_image(path: str, width: int, height: int, django: bool = False) -> InMemoryUploadedFile:
         """Change image size with Wand library"""
         image = WandImage(filename=path)
         image.call_method(method='resize', width=width, height=height)
@@ -243,22 +252,19 @@ class Util:
         return image.get(django_file=django)
 
     @staticmethod
-    def parse_file_name(path: str, ext: bool = False) -> str:
-        return parse_file_name(path, ext)
-
-    @staticmethod
-    def get_dimensions_from_path(path: str) -> tuple:
-        """Get dimensions of a image URL"""
-        image = WandImage(filename=path)
-        dimensions = (image.image.width, image.image.height)
-        return dimensions
-
-    @staticmethod
     def get_dimensions_from_file(file: File) -> tuple:
         """Get dimensions of a image file"""
         image = WandImage(blob=file.file)
         dimensions = (image.image.width, image.image.height)
         return dimensions
+
+    @staticmethod
+    def convert_to_heic(file: File, django=True) -> InMemoryUploadedFile:
+        """Convert image to heic format"""
+        image = WandImage(blob=file.file)
+        image.convert_to('heif')
+        image.name = parse_file_name(file.name)
+        return image.get(django_file=django)
 
     @staticmethod
     def download_img(url: str, django: bool = False, to_heif: bool = False):

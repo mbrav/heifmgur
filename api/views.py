@@ -12,7 +12,6 @@ from .utils.img import Util
 class ImageViewSet(viewsets.ModelViewSet):
     queryset = Image.objects.all()
 
-
     def perform_create(self, serializer):
         """Download image via URL
         and automatically assign a name if it is not given"""
@@ -23,13 +22,19 @@ class ImageViewSet(viewsets.ModelViewSet):
         url = new_data.get('url')
         image = new_data.get('picture')
 
-        if image and not name:
-            new_data['name'] = image.name
-        if url:
-            new_image = Util.download_img(url, django=True, to_heif=True)
-            new_data['picture'] = new_image
+        if image:
+            img_ext = Util.parse_file_extension(image.name)
+            if img_ext not in ['heic', 'heif']:
+                image = Util.convert_to_heic(image, django=True)
+                new_data['picture'] = image
             if not name:
-                new_data['name'] = new_image.name
+                new_data['name'] = image.name
+
+        if url:
+            image = Util.download_img(url, django=True, to_heif=True)
+            new_data['picture'] = image
+            if not name:
+                new_data['name'] = image.name
 
         new_data._mutable = False
         serializer.save(**new_data)
