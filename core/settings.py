@@ -148,6 +148,18 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # REST
 REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '10/minute',
+        'list.burst': '10/minute',
+        'list.sustained': '100/day',
+        'detail.burst': '20/minute',
+        'detail.sustained': '200/day',
+        'action.burst': '5/minute',
+        'action.sustained': '50/day',
+    },
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
-    'PAGE_SIZE': 40
+    'PAGE_SIZE': 40,
 }
