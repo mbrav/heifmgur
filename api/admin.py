@@ -10,9 +10,11 @@ class Image(admin.ModelAdmin):
     list_display = (
         'id',
         'name',
-        'pub_date',
+        'description',
         'width',
         'height',
+        'date_created',
+        'date_updated',
     )
     empty_value_display = '-empty-'
     exclude = ('width', 'height',)

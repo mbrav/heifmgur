@@ -31,8 +31,8 @@ class ImageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Image
-        fields = ('id', 'name', 'url', 'picture',
-                  'width', 'height', 'parent_picture')
+        fields = ('id', 'name', 'description', 'url', 'picture',
+                  'width', 'height', 'parent_picture', 'date_created', 'date_updated')
         read_only_fields = ('height', 'width')
 
 
@@ -45,7 +45,7 @@ class ImageUpdateSerializer(serializers.ModelSerializer):
     """
 
     class Meta(ImageSerializer.Meta):
-        read_only_fields = ('url', 'picture', 'height', 'width')
+        read_only_fields = ('url', 'picture', 'height', 'width', 'description')
 
 
 class ImageResizeSerializer(serializers.ModelSerializer):
@@ -70,4 +70,4 @@ class ImageResizeSerializer(serializers.ModelSerializer):
 
     class Meta(ImageSerializer.Meta):
         read_only_fields = ('id', 'name', 'url',
-                            'picture', 'parent_picture')
+                            'picture', 'parent_picture', 'description')

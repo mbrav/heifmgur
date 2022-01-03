@@ -5,6 +5,20 @@ from .fields import HeifmgurModelField
 
 class Image(models.Model):
 
+    name = models.CharField(
+        'Picture name',
+        help_text='Specify name of the picture',
+        max_length=255,
+        blank=True,
+    )
+
+    description = models.TextField(
+        'Description',
+        help_text='Specify description for the picture',
+        max_length=255,
+        blank=True,
+    )
+
     picture = HeifmgurModelField(
         'Image',
         help_text='Specify image file',
@@ -31,13 +45,6 @@ class Image(models.Model):
         null=True,
     )
 
-    name = models.CharField(
-        'Picture name',
-        help_text='Specify name of the picture',
-        max_length=255,
-        blank=True,
-    )
-
     width = models.PositiveIntegerField(
         'Picture width',
         null=True,
@@ -48,9 +55,14 @@ class Image(models.Model):
         null=True,
     )
 
-    pub_date = models.DateTimeField(
-        'Date of publication',
+    date_created = models.DateTimeField(
+        'Upload Date',
         auto_now_add=True,
+    )
+
+    date_updated = models.DateTimeField(
+        'Update Date',
+        auto_now=True,
     )
 
     class Meta:
