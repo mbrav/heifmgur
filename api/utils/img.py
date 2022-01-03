@@ -152,7 +152,7 @@ class WandImage(BaseImage):
     def save(self):
         print(f'{self.name}.{self.format}')
         self.image.save(filename=f'{self.name}.{self.format}')
-        
+
 
 class URLImage(BaseImage):
     """Class for URL stuff"""
@@ -230,7 +230,7 @@ class Util:
 
     @staticmethod
     def resize_image(path: str, width: int, height: int, django: bool = False):
-        """Change image size"""
+        """Change image size with Wand library"""
         image = WandImage(filename=path)
         image.call_method(method='resize', width=width, height=height)
         return image.get(django_file=django)
@@ -248,12 +248,14 @@ class Util:
 
     @staticmethod
     def get_dimensions_from_path(path: str) -> tuple:
+        """Get dimensions of a image URL"""
         image = WandImage(filename=path)
         dimensions = (image.image.width, image.image.height)
         return dimensions
 
     @staticmethod
     def get_dimensions_from_file(file: File) -> tuple:
+        """Get dimensions of a image file"""
         image = WandImage(blob=file.file)
         dimensions = (image.image.width, image.image.height)
         return dimensions

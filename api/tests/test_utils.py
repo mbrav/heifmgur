@@ -4,6 +4,8 @@ from pathlib import Path
 
 from api.utils.img import PILImage, URLImage, Util, WandImage
 
+from .util import timer
+
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 MEDIA_DIR = f'{BASE_DIR}/media'
 
@@ -11,6 +13,8 @@ MEDIA_DIR = f'{BASE_DIR}/media'
 class BaseTest(unittest.TestCase):
     image_path = f'{MEDIA_DIR}/logo.png'
     url = 'https://www.w3.org/People/mimasa/test/imgformat/img/w3c_home.jpg'
+    image_name = 'w3c_home'
+    image_ext = 'jpg'
 
 
 class PILImageTest(BaseTest):
@@ -62,10 +66,29 @@ class URLImageTest(BaseTest):
         image = URLImage(self.url)
         image.download_img()
         image_name = image.get()._size
-        assert image_name == (72, 48), 'URL to Image does not have the correct size'
+        assert image_name == (
+            72, 48), 'URL to Image does not have the correct size'
 
 
 class UtilTest(BaseTest):
+
+    def test_parse_file_name(self):
+        string = Util.parse_file_name(self.url)
+        assert string == self.image_name, 'File name not being parsed'
+        string = Util.parse_file_name(self.url, ext=True)
+        assert string == f'{self.image_name}.{self.image_ext}', 'File name not being parsed'
+
+    @timer
+    def test_resize_image(self):
+        """Completes in 0.0277 secs """
+        size = {'width': 500, 'height': 500}
+        Util.resize_image(self.image_path, **size)
+
+    @timer
+    def test_resize_image_PIL(self):
+        """Completes in 0.0072 secs """
+        size = {'width': 500, 'height': 500}
+        Util.resize_image_PIL(self.image_path, **size)
 
     def get_dimensions_from_path(self):
         dimensions = Util.get_dimensions(self.image_path)
