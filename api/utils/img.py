@@ -33,10 +33,23 @@ class BaseImage():
         self.image = None
         self.file = None
 
+        self.name = 'no_name'
         self.format = 'jpeg'
         self.mode = 'RGB'
         self.quality = 90
-        self.content_type = 'image/jpeg'
+
+    @property
+    def name_ext(self):
+        return f'{self.name}.{self.format}'
+
+    @property
+    def content_type(self):
+        mimetypes.init()
+        files = mimetypes.knownfiles
+        guessed = mimetypes.guess_type(self.name_ext)
+        if not len(guessed):
+            raise ValueError('Mime type unknown')
+        return guessed[0]
 
     def set_format_settings(
         self,
@@ -109,7 +122,6 @@ class WandImage(BaseImage):
             format = self.format
         self.format = format
         self.image.format = format
-        self.content_type = 'image/' + format
         self.image.mode = self.mode
         self.image = self.image.convert(format=format)
 
@@ -142,7 +154,7 @@ class WandImage(BaseImage):
             image_io = BytesIO(self.image.make_blob())
             django_image = InMemoryUploadedFile(
                 file=image_io,
-                name=f'{self.name}.{self.format}',
+                name=self.name_ext,
                 field_name=None,
                 content_type=self.content_type,
                 size=image_io.getbuffer().nbytes,  # BytesIO
@@ -168,6 +180,7 @@ class URLImage(BaseImage):
         self.name = parse_file_name(self.url)
         self.format = parse_file_extension(self.url)
         self.wand = None
+        self.pil = None
 
     def download_img(self, to_heif: bool = False):
         """Download image"""
@@ -178,11 +191,9 @@ class URLImage(BaseImage):
             self.wand = WandImage(file=req)
             if not is_heif:
                 self.wand.convert_to('heif')
-                self.format = 'heif'
-            self.wand.content_type = 'image/' + self.format
         else:
             image = Image.open(req)
-            self.image = image.convert(self.mode)
+            self.pil = image.convert(self.mode)
 
     def check_url(self):
         """Check URL of the image"""
@@ -206,17 +217,17 @@ class URLImage(BaseImage):
         if django_file:
             image_io = None
             if self.wand:
-                image_io = BytesIO(self.image.wand.make_blob())
-            else:
+                image_io = BytesIO(self.wand.make_blob())
+            elif self.pil:
                 image_io = BytesIO()
-                self.image.save(
+                self.pil.save(
                     image_io,
                     format=self.format,
                     quality=self.quality)
 
             django_image = InMemoryUploadedFile(
                 file=image_io,
-                name=f'{self.name}.{self.format}',
+                name=self.name_ext,
                 field_name=None,
                 content_type=self.content_type,
                 size=image_io.getbuffer().nbytes,  # BytesIO
@@ -253,7 +264,7 @@ class Util:
 
     @staticmethod
     def get_dimensions_from_file(file: File) -> tuple:
-        """Get dimensions of a image file"""
+        """Get dimensions of an image file"""
         image = WandImage(blob=file.file)
         dimensions = (image.image.width, image.image.height)
         return dimensions
