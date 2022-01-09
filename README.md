@@ -1,10 +1,11 @@
+[![Django and Pytest CI](https://github.com/mbrav/heifmgur/actions/workflows/django.yml/badge.svg)](https://github.com/mbrav/heifmgur/actions/workflows/django.yml)
+[![wakatime](https://wakatime.com/badge/user/54ad05ce-f39b-4fa3-9f2a-6fe4b1c53ba4/project/f52550ff-f468-4b17-834d-fecce184459a.svg)](https://wakatime.com/badge/user/54ad05ce-f39b-4fa3-9f2a-6fe4b1c53ba4/project/f52550ff-f468-4b17-834d-fecce184459a)
+
 <p align="center">
     <a href="https://github.com/mbrav/heifmgur" target="_blank" rel="noopener noreferrer">
         <img width="400" src="media/logo.png" title="heifmgur">
     </a>
 </p>
-
-[![Django and Pytest CI](https://github.com/mbrav/heifmgur/actions/workflows/django.yml/badge.svg?event=release)](https://github.com/mbrav/heifmgur/actions/workflows/django.yml)
 
 <p align="center">Image upload service API in Django using High Efficiency Image File Format (HEIF)</p>
 
